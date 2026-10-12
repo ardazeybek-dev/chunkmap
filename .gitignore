@@ -1,0 +1,21 @@
+# Zig build output
+zig-out/
+.zig-cache/
+zig-cache/
+
+# Local configuration / secrets
+.env
+.env.*
+!.env.example
+
+# Generated reports & scratch data
+/chunkmap-report.html
+/chunkmap-report.json
+/demo-data/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

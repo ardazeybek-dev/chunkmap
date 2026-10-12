@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, arda]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - name: Format check
+        run: zig fmt --check build.zig src
+      - name: Unit tests
+        run: zig build test --summary all
+      - name: Build (ReleaseFast)
+        run: zig build -Doptimize=ReleaseFast
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: End-to-end
+        shell: bash
+        run: python scripts/e2e.py zig-out/bin/chunkmap$([ "$RUNNER_OS" = "Windows" ] && echo .exe)
+
+  cross:
+    name: cross-compile all targets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - run: zig build release
+      - run: ls -R zig-out

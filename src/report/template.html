@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chunkmap report</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Crect x='6' y='6' width='12' height='9' rx='2' fill='%23ffb84d'/%3E%3Crect x='20' y='6' width='6' height='9' rx='2' fill='%2340e0c4'/%3E%3Crect x='6' y='17' width='7' height='9' rx='2' fill='%2340e0c4'/%3E%3Crect x='15' y='17' width='11' height='9' rx='2' fill='%23ff7066'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0b0e14; --bg-2:#10141c; --panel:#131924; --panel-2:#18202d; --line:#232c3b; --line-2:#2c3748;
+  --text:#e6e9ef; --muted:#8a94a7; --faint:#5b6578;
+  --amber:#ffb84d; --teal:#40e0c4; --coral:#ff7066; --violet:#a78bfa; --blue:#60a5fa;
+  --clean:#1d3a40; --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 12px 32px -16px rgba(0,0,0,.6);
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular","Cascadia Code",Menlo,Consolas,monospace;
+  --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f7f9; --bg-2:#eef0f4; --panel:#ffffff; --panel-2:#f3f5f8; --line:#e2e6ec; --line-2:#d5dbe3;
+    --text:#151a23; --muted:#5b6577; --faint:#8b94a4; --clean:#cfe9e4;
+    --amber:#d98a00; --teal:#0f9f86; --coral:#e2483d; --violet:#7c5ce0;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px -12px rgba(16,24,40,.12);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f6f7f9; --bg-2:#eef0f4; --panel:#ffffff; --panel-2:#f3f5f8; --line:#e2e6ec; --line-2:#d5dbe3;
+  --text:#151a23; --muted:#5b6577; --faint:#8b94a4; --clean:#cfe9e4;
+  --amber:#d98a00; --teal:#0f9f86; --coral:#e2483d; --violet:#7c5ce0;
+  --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px -12px rgba(16,24,40,.12);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans);font-feature-settings:"tnum" 1,"cv11" 1}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:radial-gradient(900px 420px at 12% -8%,color-mix(in srgb,var(--amber) 9%,transparent),transparent 70%),
+             radial-gradient(800px 380px at 95% 0%,color-mix(in srgb,var(--teal) 8%,transparent),transparent 70%)}
+a{color:var(--teal)}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 24px 64px}
+header.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{flex:none}
+.brand h1{font:700 20px/1 var(--sans);letter-spacing:-.02em;margin:0}
+.brand h1 span{color:var(--muted);font-weight:500}
+.meta{color:var(--muted);font:12px/1.4 var(--mono);display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.icon-btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:3px 10px;cursor:pointer;font:inherit}
+.icon-btn:hover{border-color:var(--line-2)}
+.roots{font:12.5px var(--mono);color:var(--muted);margin:-14px 0 22px;overflow-wrap:anywhere}
+.roots b{color:var(--text);font-weight:500}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.big{padding:24px 26px;position:relative;overflow:hidden}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.headline{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:14px 0 4px}
+.headline .num{font:800 clamp(40px,6vw,64px)/1 var(--sans);letter-spacing:-.04em;
+  background:linear-gradient(100deg,var(--amber),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent}
+.headline .pct{font:600 18px var(--mono);color:var(--text)}
+.sub{color:var(--muted);margin:0 0 18px}
+.stack{display:flex;height:14px;border-radius:999px;overflow:hidden;background:var(--bg-2);border:1px solid var(--line)}
+.stack i{display:block;height:100%;transition:filter .2s}
+.stack i:hover{filter:brightness(1.2)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend b{color:var(--text);font:600 12.5px var(--mono);margin-left:4px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kpi{padding:18px 20px}
+.kpi .v{font:700 26px/1.1 var(--sans);letter-spacing:-.02em;margin-top:10px}
+.kpi .d{color:var(--muted);font-size:12.5px;margin-top:4px}
+.kpi .v small{font-size:15px;color:var(--muted);font-weight:600}
+
+/* sections */
+section{margin-top:16px}
+.sec-head{display:flex;align-items:center;gap:12px;padding:18px 22px 0;flex-wrap:wrap}
+.sec-head h2{font:700 16px/1.2 var(--sans);letter-spacing:-.01em;margin:0}
+.sec-head .hint{color:var(--muted);font-size:12.5px}
+.sec-head .spacer{flex:1}
+.sec-body{padding:16px 22px 22px}
+input.search{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:8px 12px;font:13px var(--sans);width:260px;max-width:100%}
+input.search:focus{outline:2px solid color-mix(in srgb,var(--teal) 50%,transparent);outline-offset:1px}
+
+/* treemap */
+.crumbs{display:flex;gap:4px;flex-wrap:wrap;font:12.5px var(--mono);color:var(--muted);margin-bottom:10px;align-items:center}
+.crumbs button{background:none;border:0;color:var(--teal);cursor:pointer;font:inherit;padding:2px 4px;border-radius:6px}
+.crumbs button:hover{background:var(--panel-2)}
+.crumbs .cur{color:var(--text);padding:2px 4px}
+#treemap{position:relative;height:clamp(340px,56vh,560px);border-radius:12px;overflow:hidden;background:var(--bg-2);border:1px solid var(--line)}
+.tm{position:absolute;overflow:hidden;border:1px solid var(--bg);border-radius:4px;cursor:pointer;transition:filter .12s}
+.tm:hover{filter:brightness(1.18) saturate(1.1);z-index:2}
+.tm .lbl{position:absolute;left:6px;top:4px;right:6px;font:600 11.5px/1.25 var(--sans);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.tm .lbl small{display:block;font:500 10.5px var(--mono);opacity:.85}
+.tm.light .lbl{color:#0f1720;text-shadow:none}
+.tm.group{background:rgba(0,0,0,.18)!important;cursor:zoom-in}
+.tm.group>.lbl{top:3px}
+.scale{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.scale .grad{width:180px;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--clean),#2bb59b,var(--amber),var(--coral))}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;box-shadow:0 12px 30px rgba(0,0,0,.35);font-size:12.5px;max-width:360px;opacity:0;transition:opacity .1s}
+#tip .t{font-weight:700;overflow-wrap:anywhere;margin-bottom:4px}
+#tip .r{display:flex;justify-content:space-between;gap:18px;color:var(--muted)}
+#tip .r b{color:var(--text);font:600 12px var(--mono)}
+
+/* lists */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dup{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--panel-2)}
+.dup-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dup-top .w{font:700 16px var(--mono);color:var(--coral)}
+.dup-top .x{font:600 12px var(--mono);color:var(--bg);background:var(--amber);border-radius:6px;padding:1px 7px}
+.dup-top .n{font-weight:600;overflow-wrap:anywhere}
+.dup-top .each{color:var(--muted);font:12px var(--mono);margin-left:auto}
+.paths{list-style:none;margin:8px 0 0;padding:0}
+.paths li{display:flex;gap:8px;align-items:center;font:12.5px/1.5 var(--mono);padding:3px 0;border-top:1px dashed var(--line)}
+.paths li:first-child{border-top:0}
+.paths .p{overflow-wrap:anywhere;flex:1}
+.paths .p span{color:var(--muted)}
+.paths .keep{font:600 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--teal);border:1px solid color-mix(in srgb,var(--teal) 45%,transparent);border-radius:5px;padding:0 5px}
+.copy{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;font:11px var(--sans);padding:1px 7px;cursor:pointer}
+.copy:hover{color:var(--text);border-color:var(--line-2)}
+.more{display:block;margin:6px auto 0;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 16px;cursor:pointer;font:600 13px var(--sans)}
+.pair{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center;border-top:1px solid var(--line);padding:12px 0}
+.pair:first-child{border-top:0;padding-top:0}
+.ring{width:56px;height:56px}
+.ring text{font:700 13px var(--mono);fill:var(--text)}
+.pair .files{font:12.5px/1.55 var(--mono);overflow-wrap:anywhere}
+.pair .files div span{color:var(--muted)}
+.pair .stats{color:var(--muted);font-size:12px;margin-top:4px}
+.pair .stats b{color:var(--text);font-family:var(--mono)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 8px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+td.path{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+tr:last-child td{border-bottom:0}
+.minibar{height:8px;border-radius:999px;background:var(--bg-2);overflow:hidden;min-width:80px;border:1px solid var(--line)}
+.minibar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--coral))}
+#hist{width:100%;height:190px;display:block}
+#hist text{font:10.5px var(--mono);fill:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:26px 10px;border:1px dashed var(--line);border-radius:12px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.how div{padding:16px 18px}
+.how h3{margin:8px 0 6px;font:700 14px var(--sans)}
+.how p{margin:0;color:var(--muted);font-size:13px}
+.step{font:700 11px var(--mono);color:var(--amber)}
+footer{margin-top:28px;color:var(--faint);font:12px var(--mono);text-align:center}
+@media (max-width:900px){.hero,.grid2,.how{grid-template-columns:1fr}.meta{margin-left:0}}
+@media (max-width:520px){.wrap{padding:18px 16px 48px}.kpis{grid-template-columns:1fr}input.search{width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0d1117"/><rect x="6" y="6" width="12" height="9" rx="2" fill="#ffb84d"/><rect x="20" y="6" width="6" height="9" rx="2" fill="#40e0c4"/><rect x="6" y="17" width="7" height="9" rx="2" fill="#40e0c4"/><rect x="15" y="17" width="11" height="9" rx="2" fill="#ff7066"/></svg>
+      <h1>chunkmap <span>report</span></h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="roots" id="roots"></div>
+
+  <div class="hero">
+    <div class="card big">
+      <div class="eyebrow">Reclaimable space</div>
+      <div class="headline"><span class="num" id="reclaim">–</span><span class="pct" id="reclaimPct"></span></div>
+      <p class="sub" id="reclaimSub"></p>
+      <div class="stack" id="stack"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="kpis">
+      <div class="card kpi"><div class="eyebrow">Scanned</div><div class="v" id="kScanned">–</div><div class="d" id="kScannedD"></div></div>
+      <div class="card kpi"><div class="eyebrow">Unique data</div><div class="v" id="kUnique">–</div><div class="d" id="kUniqueD"></div></div>
+      <div class="card kpi"><div class="eyebrow">Dedup ratio</div><div class="v" id="kRatio">–</div><div class="d">what a deduplicating backup would store</div></div>
+      <div class="card kpi"><div class="eyebrow">Throughput</div><div class="v" id="kSpeed">–</div><div class="d" id="kSpeedD"></div></div>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="sec-head"><h2>Where the redundancy lives</h2><span class="hint">Area = size · colour = share of bytes already stored elsewhere. Click a folder to zoom.</span></div>
+    <div class="sec-body">
+      <div class="crumbs" id="crumbs"></div>
+      <div id="treemap" role="img" aria-label="Treemap of scanned folders"></div>
+      <div class="scale"><span>0% redundant</span><span class="grad"></span><span>100% redundant</span><span id="omitted"></span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><h2>Exact duplicates</h2><span class="hint" id="dupHint"></span><span class="spacer"></span><input class="search" id="dupSearch" type="search" placeholder="Filter by path or name…"></div>
+    <div class="sec-body" id="dups"></div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><h2>Near-duplicates</h2><span class="hint">Different files that share content — edited copies, versions, re-exports. Found by matching content-defined chunks.</span></div>
+    <div class="sec-body" id="pairs"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="sec-head"><h2>Hotspot folders</h2><span class="hint">by redundant bytes</span></div>
+      <div class="sec-body" id="dirs"></div>
+    </section>
+    <section class="card">
+      <div class="sec-head"><h2>By file type</h2><span class="hint">redundant / total</span></div>
+      <div class="sec-body" id="exts"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="sec-head"><h2>Chunk size distribution</h2><span class="hint" id="histHint"></span></div>
+    <div class="sec-body"><svg id="hist" role="img" aria-label="Histogram of chunk sizes"></svg></div>
+  </section>
+
+  <section class="how">
+    <div class="card"><div class="step">01 · CHUNK</div><h3>Content-defined boundaries</h3><p>Every file is cut with FastCDC: a Gear rolling hash picks boundaries from the bytes themselves, so an insertion only changes nearby chunks.</p></div>
+    <div class="card"><div class="step">02 · HASH</div><h3>BLAKE3 fingerprints</h3><p>Each chunk and each whole file is fingerprinted with BLAKE3 in one parallel pass. Every byte is read exactly once.</p></div>
+    <div class="card"><div class="step">03 · MATCH</div><h3>Index &amp; attribute</h3><p>A global chunk index counts what's stored twice, groups identical files and pairs files that share content.</p></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+<div id="tip"></div>
+<script id="chunkmap-data" type="application/json">__CHUNKMAP_DATA__</script>
+<script>
+(() => {
+"use strict";
+const D = JSON.parse(document.getElementById("chunkmap-data").textContent);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtB = (n) => { if (n < 1024) return n + " B"; const u = ["KiB","MiB","GiB","TiB","PiB"]; let v = n, i = -1; do { v /= 1024; i++; } while (v >= 1024 && i < u.length - 1); return (v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + " " + u[i]; };
+const fmtN = (n) => n.toLocaleString("en-US");
+const pct = (a, b) => (b ? (100 * a / b) : 0);
+const fmtP = (p) => (p >= 10 || p === 0 ? p.toFixed(0) : p.toFixed(1)) + "%";
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const S = D.summary;
+
+/* ---- theme toggle ---- */
+const themeBtn = document.createElement("button");
+themeBtn.className = "icon-btn"; themeBtn.type = "button"; themeBtn.title = "Toggle light/dark";
+const applyTheme = (t) => { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; themeBtn.textContent = (t || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")) === "light" ? "☾ dark" : "☀ light"; };
+try { applyTheme(localStorage.getItem("chunkmap-theme")); } catch { applyTheme(null); }
+themeBtn.onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); const next = cur === "light" ? "dark" : "light"; applyTheme(next); try { localStorage.setItem("chunkmap-theme", next); } catch {} renderTreemap(); renderHist(); };
+
+/* ---- header ---- */
+const when = new Date(D.generated_at * 1000);
+$("meta").innerHTML = [
+  `v${esc(D.version)}`, `FastCDC avg ${fmtB(D.params.avg_chunk)}`, "BLAKE3", `${D.params.threads} threads`, when.toLocaleString()
+].map((t) => `<span class="chip">${t}</span>`).join("");
+$("meta").appendChild(themeBtn);
+$("roots").innerHTML = "Scanned: " + D.roots.map((r) => `<b>${esc(r)}</b>`).join(", ") +
+  (D.params.excludes.length ? ` &nbsp;·&nbsp; excluded: ${D.params.excludes.map(esc).join(", ")}` : "");
+
+/* ---- hero ---- */
+$("reclaim").textContent = fmtB(S.reclaimable_bytes);
+$("reclaimPct").textContent = fmtP(pct(S.reclaimable_bytes, S.bytes)) + " of scanned";
+$("reclaimSub").textContent = S.reclaimable_bytes
+  ? `${fmtB(S.exact_duplicate_bytes)} sits in byte-identical copies; another ${fmtB(S.partial_redundant_bytes)} is repeated inside or across files that are not identical.`
+  : "No redundancy found — every byte in this scan is unique.";
+const segs = [
+  ["Unique", S.unique_bytes, "var(--teal)"],
+  ["Exact copies", S.exact_duplicate_bytes, "var(--coral)"],
+  ["Partial overlap", S.partial_redundant_bytes, "var(--amber)"],
+];
+$("stack").innerHTML = segs.map(([n, v, c]) => `<i title="${n}: ${fmtB(v)}" style="width:${pct(v, S.bytes)}%;background:${c}"></i>`).join("");
+$("legend").innerHTML = segs.map(([n, v, c]) => `<span><span class="dot" style="background:${c}"></span>${n}<b>${fmtB(v)}</b></span>`).join("");
+$("kScanned").textContent = fmtB(S.bytes);
+$("kScannedD").textContent = `${fmtN(S.files)} files · ${fmtN(D.scan.dirs)} folders` + (S.failed_files ? ` · ${fmtN(S.failed_files)} unreadable` : "");
+$("kUnique").textContent = fmtB(S.unique_bytes);
+$("kUniqueD").textContent = `${fmtN(S.chunks_unique)} unique of ${fmtN(S.chunks_total)} chunks`;
+$("kRatio").innerHTML = `${S.dedup_ratio.toFixed(2)}<small>×</small>`;
+const secs = Math.max(D.duration_ms, 1) / 1000;
+$("kSpeed").textContent = fmtB(Math.round(S.bytes / secs)) + "/s";
+$("kSpeedD").textContent = `${secs < 60 ? secs.toFixed(1) + " s" : Math.floor(secs / 60) + " min " + Math.round(secs % 60) + " s"} wall time`;
+
+/* ---- tooltip ---- */
+const tip = $("tip");
+const showTip = (e, html) => { tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); };
+const moveTip = (e) => { const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14; if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; };
+const hideTip = () => { tip.style.opacity = 0; };
+
+/* ---- tree ---- */
+function buildTree(files) {
+  const split = files.map((f) => f.p.split("/"));
+  // Strip the directory prefix shared by every file so the root is meaningful.
+  let common = split.length ? split[0].slice(0, -1) : [];
+  for (const parts of split) { let i = 0; while (i < common.length && i < parts.length - 1 && parts[i] === common[i]) i++; common = common.slice(0, i); }
+  const root = { name: common.join("/") || "/", kids: new Map(), s: 0, r: 0, n: 0, dir: true, path: common.join("/") };
+  files.forEach((f, idx) => {
+    const parts = split[idx].slice(common.length);
+    let node = root;
+    node.s += f.s; node.r += f.r; node.n++;
+    for (let i = 0; i < parts.length; i++) {
+      const leaf = i === parts.length - 1;
+      let k = node.kids.get(parts[i]);
+      if (!k) { k = { name: parts[i], kids: new Map(), s: 0, r: 0, n: 0, dir: !leaf, parent: node, path: (node.path ? node.path + "/" : "") + parts[i] }; node.kids.set(parts[i], k); }
+      k.s += f.s; k.r += f.r; k.n++;
+      node = k;
+    }
+  });
+  if (D.files_omitted) root.kids.set("…", { name: `${fmtN(D.files_omitted)} smaller files`, kids: new Map(), s: D.bytes_omitted, r: 0, n: D.files_omitted, dir: false, other: true, parent: root, path: "" });
+  return root;
+}
+const tree = buildTree(D.files);
+let focus = tree;
+// Collapse single-child chains at the root (e.g. home/user/stuff).
+while (focus.kids.size === 1 && [...focus.kids.values()][0].dir) focus = [...focus.kids.values()][0];
+
+function squarify(items, x, y, w, h) {
+  const out = [];
+  const total = items.reduce((a, b) => a + b.v, 0);
+  if (!total || w <= 0 || h <= 0) return out;
+  const scale = (w * h) / total;
+  let rest = items.filter((i) => i.v > 0).map((i) => ({ ...i, a: i.v * scale }));
+  const worst = (row, side) => { let s = 0, mx = 0, mn = Infinity; for (const r of row) { s += r.a; mx = Math.max(mx, r.a); mn = Math.min(mn, r.a); } return Math.max((side * side * mx) / (s * s), (s * s) / (side * side * mn)); };
+  while (rest.length) {
+    const side = Math.min(w, h);
+    let row = [rest[0]], i = 1, cur = worst(row, side);
+    while (i < rest.length) { const next = row.concat(rest[i]); const wv = worst(next, side); if (wv > cur) break; row = next; cur = wv; i++; }
+    const area = row.reduce((a, b) => a + b.a, 0), thick = area / side;
+    if (w >= h) { let cy = y; for (const r of row) { const rh = r.a / thick; out.push({ ...r, x, y: cy, w: thick, h: rh }); cy += rh; } x += thick; w -= thick; }
+    else { let cx = x; for (const r of row) { const rw = r.a / thick; out.push({ ...r, x: cx, y, w: rw, h: thick }); cx += rw; } y += thick; h -= thick; }
+    rest = rest.slice(i);
+  }
+  return out;
+}
+function heat(ratio) {
+  const stops = [[0, css("--clean")], [0.25, "#2bb59b"], [0.6, css("--amber")], [1, css("--coral")]];
+  const hex = (h) => { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map((c) => c + c).join(""); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+  for (let i = 1; i < stops.length; i++) {
+    if (ratio <= stops[i][0]) { const [t0, c0] = stops[i - 1], [t1, c1] = stops[i]; const t = (ratio - t0) / (t1 - t0 || 1); const a = hex(c0), b = hex(c1); return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t)).join(",")})`; }
+  }
+  return css("--coral");
+}
+const luma = (rgb) => { const [r, g, b] = rgb.match(/\d+/g).map(Number); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+function topKids(node, limit) {
+  const kids = [...node.kids.values()].sort((a, b) => b.s - a.s);
+  if (kids.length <= limit) return kids;
+  const head = kids.slice(0, limit), tail = kids.slice(limit);
+  head.push({ name: `${tail.length} more`, kids: new Map(), s: tail.reduce((a, b) => a + b.s, 0), r: tail.reduce((a, b) => a + b.r, 0), n: tail.reduce((a, b) => a + b.n, 0), dir: false, other: true, parent: node, path: node.path });
+  return head;
+}
+function tipFor(n) {
+  return `<div class="t">${esc(n.path || n.name)}</div>` +
+    `<div class="r">Size<b>${fmtB(n.s)}</b></div>` +
+    `<div class="r">Already stored elsewhere<b>${fmtB(n.r)} · ${fmtP(pct(n.r, n.s))}</b></div>` +
+    (n.dir || n.other ? `<div class="r">Files<b>${fmtN(n.n)}</b></div>` : "");
+}
+function renderTreemap() {
+  const el = $("treemap");
+  el.innerHTML = "";
+  const W = el.clientWidth, H = el.clientHeight;
+  const frag = document.createDocumentFragment();
+  const draw = (node, x, y, w, h, depth) => {
+    const rects = squarify(topKids(node, depth === 0 ? 80 : 40).map((k) => ({ k, v: k.s })), x, y, w, h);
+    for (const r of rects) {
+      const k = r.k, div = document.createElement("div");
+      const bg = heat(k.s ? k.r / k.s : 0);
+      div.className = "tm" + (luma(bg) > 0.62 ? " light" : ""); div.style.cssText = `left:${r.x}px;top:${r.y}px;width:${Math.max(r.w, 0)}px;height:${Math.max(r.h, 0)}px;background:${bg}`;
+      const nested = depth === 0 && k.dir && k.kids.size > 0 && r.w > 70 && r.h > 54;
+      if (r.w > 46 && r.h > 22) div.innerHTML = `<div class="lbl">${esc(k.name)}${r.h > 38 && !nested ? `<small>${fmtB(k.s)}${k.r ? " · " + fmtP(pct(k.r, k.s)) + " dup" : ""}</small>` : ""}</div>`;
+      div.addEventListener("mousemove", (e) => { e.stopPropagation(); showTip(e, tipFor(k)); });
+      div.addEventListener("mouseleave", hideTip);
+      if (k.dir && k.kids.size) div.addEventListener("click", (e) => { e.stopPropagation(); hideTip(); focus = k; renderTreemap(); });
+      frag.appendChild(div);
+      if (nested) { div.classList.add("group"); div.style.background = ""; draw(k, r.x + 2, r.y + 20, r.w - 4, r.h - 22, depth + 1); }
+    }
+  };
+  if (!focus.kids.size) el.innerHTML = '<div class="empty" style="margin:20px">Nothing to show.</div>';
+  draw(focus, 0, 0, W, H, 0);
+  el.appendChild(frag);
+  // breadcrumbs
+  const chain = []; for (let n = focus; n; n = n.parent) chain.unshift(n);
+  $("crumbs").innerHTML = "";
+  chain.forEach((n, i) => {
+    if (i) $("crumbs").insertAdjacentText("beforeend", "/");
+    if (n === focus) { const s = document.createElement("span"); s.className = "cur"; s.textContent = n.name || "/"; $("crumbs").appendChild(s); }
+    else { const b = document.createElement("button"); b.textContent = n.name || "/"; b.onclick = () => { focus = n; renderTreemap(); }; $("crumbs").appendChild(b); }
+  });
+  $("crumbs").insertAdjacentHTML("beforeend", `<span style="margin-left:auto">${fmtB(focus.s)} · ${fmtN(focus.n)} files · ${fmtP(pct(focus.r, focus.s))} redundant</span>`);
+}
+$("omitted").textContent = D.files_omitted ? `· ${fmtN(D.files_omitted)} smaller files (${fmtB(D.bytes_omitted)}) grouped` : "";
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderTreemap, 120); });
+
+/* ---- duplicates ---- */
+const splitPath = (p) => { const i = p.lastIndexOf("/"); return i < 0 ? ["", p] : [p.slice(0, i + 1), p.slice(i + 1)]; };
+const pathHtml = (p) => { const [d, b] = splitPath(p); return `<span>${esc(d)}</span>${esc(b)}`; };
+$("dupHint").textContent = D.duplicate_groups_total
+  ? `${fmtN(D.duplicate_groups_total)} groups · ${fmtB(S.exact_duplicate_bytes)} wasted` + (D.duplicate_groups_total > D.duplicate_groups.length ? ` · top ${fmtN(D.duplicate_groups.length)} shown` : "")
+  : "";
+let dupLimit = 12;
+function renderDups() {
+  const q = $("dupSearch").value.trim().toLowerCase();
+  const list = D.duplicate_groups.filter((g) => !q || g.paths.some((p) => p.toLowerCase().includes(q)));
+  if (!list.length) { $("dups").innerHTML = `<div class="empty">${q ? "No duplicate group matches this filter." : "No byte-identical files found. 🎉"}</div>`; return; }
+  $("dups").innerHTML = list.slice(0, dupLimit).map((g) => `
+    <div class="dup">
+      <div class="dup-top"><span class="w">${fmtB(g.wasted)}</span><span class="x">×${g.paths.length}</span><span class="n">${esc(splitPath(g.paths[0])[1])}</span><span class="each">${fmtB(g.size)} each · blake3 ${g.digest.slice(0, 12)}</span></div>
+      <ul class="paths">${g.paths.map((p, i) => `<li><span class="p">${pathHtml(p)}</span>${i === 0 ? '<span class="keep">keep</span>' : ""}<button class="copy" data-p="${esc(p)}">copy</button></li>`).join("")}</ul>
+    </div>`).join("") + (list.length > dupLimit ? `<button class="more" id="dupMore">Show ${Math.min(24, list.length - dupLimit)} more of ${fmtN(list.length - dupLimit)}</button>` : "");
+  const m = $("dupMore"); if (m) m.onclick = () => { dupLimit += 24; renderDups(); };
+}
+$("dupSearch").addEventListener("input", () => { dupLimit = 12; renderDups(); });
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".copy"); if (!b) return;
+  navigator.clipboard?.writeText(b.dataset.p).then(() => { b.textContent = "copied"; setTimeout(() => (b.textContent = "copy"), 1200); }, () => {});
+});
+
+/* ---- near-duplicates ---- */
+function ring(frac) {
+  const r = 24, c = 2 * Math.PI * r;
+  return `<svg class="ring" viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="28" cy="28" r="${r}" fill="none" stroke="url(#rg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(c * frac).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 28 28)"/><text x="28" y="32.5" text-anchor="middle">${Math.round(frac * 100)}%</text></svg>`;
+}
+let pairLimit = 8;
+function renderPairs() {
+if (!D.similar_pairs.length) { $("pairs").innerHTML = '<div class="empty">No partially overlapping files above the similarity threshold.</div>'; return; }
+const rest = D.similar_pairs.length - pairLimit;
+$("pairs").innerHTML = `<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="var(--teal)"/><stop offset="1" stop-color="var(--amber)"/></linearGradient></defs></svg>` +
+  D.similar_pairs.slice(0, pairLimit).map((p) => `
+  <div class="pair">${ring(p.containment)}
+    <div><div class="files"><div>${pathHtml(p.a)}</div><div>${pathHtml(p.b)}</div></div>
+    <div class="stats"><b>${fmtB(p.shared)}</b> shared · sizes <b>${fmtB(p.size_a)}</b> / <b>${fmtB(p.size_b)}</b> · overlap ${fmtP(p.jaccard * 100)} of combined</div></div>
+  </div>`).join("") + (rest > 0 ? `<button class="more" id="pairMore">Show ${Math.min(16, rest)} more of ${fmtN(rest)}</button>` : "");
+const m = $("pairMore"); if (m) m.onclick = () => { pairLimit += 16; renderPairs(); };
+}
+renderPairs();
+
+/* ---- tables ---- */
+const table = (rows, keyLabel, keyClass) => rows.length ? `<table><thead><tr><th>${keyLabel}</th><th style="text-align:right">Redundant</th><th></th><th style="text-align:right">Total</th></tr></thead><tbody>` +
+  rows.map((r) => `<tr><td class="${keyClass}">${esc(r.key)}</td><td class="num">${fmtB(r.redundant)}</td><td><div class="minibar" title="${fmtP(pct(r.redundant, r.bytes))}"><i style="width:${pct(r.redundant, r.bytes)}%"></i></div></td><td class="num">${fmtB(r.bytes)}<br><span style="color:var(--muted);font-size:11px">${fmtN(r.files)} files</span></td></tr>`).join("") + "</tbody></table>"
+  : '<div class="empty">Nothing redundant here.</div>';
+$("dirs").innerHTML = table(D.directories.filter((d) => d.redundant > 0).slice(0, 12), "Folder", "path");
+$("exts").innerHTML = table(D.extensions.slice(0, 12), "Type", "path");
+
+/* ---- histogram ---- */
+function renderHist() {
+  const svg = $("hist"), H = D.chunk_histogram;
+  const W = svg.clientWidth || 800, Hh = 190, pad = { l: 8, r: 8, t: 14, b: 26 };
+  const total = H.reduce((a, b) => a + b.count, 0);
+  if (!H.length) { svg.innerHTML = ""; return; }
+  const mean = S.chunks_unique ? S.unique_bytes / S.chunks_unique : 0;
+  $("histHint").textContent = `${fmtN(total)} unique chunks · mean ${fmtB(Math.round(mean))} · target ${fmtB(D.params.avg_chunk)} (min ${fmtB(D.params.min_chunk)}, max ${fmtB(D.params.max_chunk)})`;
+  const max = Math.max(...H.map((h) => h.count));
+  const bw = (W - pad.l - pad.r) / H.length;
+  svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`);
+  svg.innerHTML = `<defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${css("--amber")}"/><stop offset="1" stop-color="${css("--coral")}" stop-opacity=".75"/></linearGradient></defs>` +
+    H.map((h, i) => {
+      const bh = Math.max(2, (h.count / max) * (Hh - pad.t - pad.b));
+      const x = pad.l + i * bw + bw * 0.14, y = Hh - pad.b - bh;
+      return `<g><title>${fmtB(h.min_bytes)} – ${fmtB(h.min_bytes * 2)}: ${fmtN(h.count)} chunks (${fmtP(pct(h.count, total))})</title>
+        <rect x="${x}" y="${y}" width="${bw * 0.72}" height="${bh}" rx="4" fill="url(#hg)"/>
+        <text x="${x + bw * 0.36}" y="${Hh - 9}" text-anchor="middle">${fmtB(h.min_bytes).replace(".00", "")}</text>
+        ${h.count / max > 0.08 ? `<text x="${x + bw * 0.36}" y="${y - 4}" text-anchor="middle">${fmtP(pct(h.count, total))}</text>` : ""}</g>`;
+    }).join("");
+}
+
+$("foot").innerHTML = `generated by chunkmap ${esc(D.version)} · schema ${D.schema} · ${fmtN(D.scan.excluded)} excluded · ${fmtN(D.scan.symlinks)} symlinks skipped`;
+renderTreemap(); renderDups(); renderHist();
+})();
+</script>
+</body>
+</html>

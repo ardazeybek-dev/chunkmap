@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - name: Cross-compile
+        run: zig build release -Dversion="${TAG#v}"
+      - name: Package
+        run: |
+          mkdir dist
+          for dir in zig-out/*/; do
+            triple=$(basename "$dir")
+            [ "$triple" = "bin" ] && continue
+            name="chunkmap-${TAG}-${triple}"
+            mkdir -p "pkg/$name"
+            cp "$dir"/bin/chunkmap* README.md LICENSE .env.example "pkg/$name/"
+            if [[ "$triple" == *windows* ]]; then
+              (cd pkg && zip -qr "../dist/$name.zip" "$name")
+            else
+              tar -C pkg -czf "dist/$name.tar.gz" "$name"
+            fi
+          done
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+          ls -l dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          generate_release_notes: true
+          files: dist/*
