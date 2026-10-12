@@ -2,7 +2,7 @@
   "schema": 1,
   "tool": "chunkmap",
   "version": "0.1.0",
-  "generated_at": 1791822405,
+  "generated_at": 1791824490,
   "duration_ms": 231,
   "roots": [
     "demo-data"
