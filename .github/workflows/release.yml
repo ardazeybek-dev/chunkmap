@@ -34,7 +34,7 @@ jobs:
             [ "$triple" = "bin" ] && continue
             name="chunkmap-${TAG}-${triple}"
             mkdir -p "pkg/$name"
-            cp "$dir"/bin/chunkmap* README.md LICENSE .env.example "pkg/$name/"
+            cp "$dir"chunkmap* README.md LICENSE .env.example "pkg/$name/"
             if [[ "$triple" == *windows* ]]; then
               (cd pkg && zip -qr "../dist/$name.zip" "$name")
             else

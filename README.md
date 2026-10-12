@@ -153,14 +153,14 @@ flowchart LR
 
 ## Benchmarks
 
-Measured with a ReleaseFast build on a 12-thread laptop (Windows 11, NVMe), warm cache:
+Measured with a ReleaseFast build on a 12-thread Windows 11 laptop, warm file cache:
 
 | Data set | Files | Size | Time | Throughput | Reclaimable |
 |---|---:|---:|---:|---:|---:|
 | Synthetic messy home folder (`scripts/make_demo_data.py`) | 85 | 273 MiB | 0.22 s | 1.2 GiB/s | 45 % |
 | Real projects folder with Python virtualenvs | 37,119 | 2.90 GiB | 3.2 s | 921 MiB/s | 27 % |
 
-Memory is dominated by chunk metadata: roughly 70 bytes per chunk (≈4–5 GB of RAM per TB scanned at the default 16 KiB average). Memory scales inversely with the chunk size, so use `--avg-chunk 64K` or larger for multi-terabyte scans.
+Memory is dominated by chunk metadata: an estimated ~70 bytes per chunk (≈4–5 GB of RAM per TB scanned at the default 16 KiB average). Memory scales inversely with the chunk size, so use `--avg-chunk 64K` or larger for multi-terabyte scans.
 
 ## JSON report
 
